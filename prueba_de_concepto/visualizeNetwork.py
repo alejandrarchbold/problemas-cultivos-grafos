@@ -150,9 +150,30 @@ def floyd_warshall_tough_work(L_i):
     return nada
     #print(L_i)
     
+def create_visualization(H, nodeColor, edgeColor, fontSize):
+
+    #obtención de los pesos del grafo para añadirlos como 
+    #etiquetas
+    edge_weights = {(u,v):round(d['weight'],2) for u,v,d in H.edges(data=True)}
+    pos = nx.drawing.layout.spring_layout(H, k=2/m.sqrt(len(H.nodes)))
+
+    #asignación de tamaño de los vértices en la visualización
+    sizes = []
+    for n in H.nodes:
+        if H.degree()[n] != 0:
+            sizes.append(80*H.degree()[n])
+        else:
+            sizes.append(40) # tamaño por defecto para nodos aislados
+
+    #dibujado de las etiquetas en el grafo a visualizar
+    nx.draw_networkx_edge_labels(G=H,pos=pos, edge_labels=edge_weights, font_color='b', font_size = fontSize)
+
+    #dibujo del grafo
+    nx.draw(H, with_labels = False, font_weight='bold', pos=pos, node_size = sizes, edgecolors = edgeColor, node_color = nodeColor)
+    plt.show()
 
 #se obtiene el grafo generado a partir del archivo csv
-graph = readGrapFile('./datos_prueba_grande.csv', ',' , 0)
+graph = readGrapFile('./maiz.csv', ',' , 0)
 
 #for e, datadict in graph.edges.items():
 #    print(e, datadict)
@@ -161,14 +182,10 @@ floyd_warshall(graph)
 
 print("Grafo generado: \n")
 
-
-edge_weights = {(u,v,):round(d['weight'],2) for u,v,d in graph.edges(data=True)}
-pos = nx.drawing.layout.spring_layout(graph, k=2/m.sqrt(len(graph.nodes)))
+create_visualization(graph, 'red', 'orange', 9)
 
 
-nx.draw_networkx_edge_labels(G=graph,pos=pos, edge_labels=edge_weights, font_color='b', font_size = 10)
-nx.draw(graph, with_labels = True, font_weight='bold', pos=pos)
-plt.show()
+
 
 #documentation used:
 #1) https://networkx.org/documentation/networkx-2.5/tutorial.html#drawing-graphs
