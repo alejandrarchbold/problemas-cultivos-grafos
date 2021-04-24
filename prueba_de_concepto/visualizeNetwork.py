@@ -1,4 +1,4 @@
-import math as m
+import math
 import networkx as nx
 import pandas as pd
 import numpy as np
@@ -91,7 +91,7 @@ def euclidian_norm(vector):
     for i in vector:
         norm += i**2
 
-    return m.sqrt(norm)
+    return math.sqrt(norm)
 
 
 def get_adjacency_matrix(G):
@@ -136,26 +136,82 @@ def get_adjacency_matrix(G):
 
 def floyd_warshall(H):
 
+    #obtención de la matiz de adyacencia 
     adj_mat, nodes_set = get_adjacency_matrix(H)
+    
+    #primera iteración del algoritmo
+    n_iters = len(nodes_set)
+    k = 0
+    result_matrix = floyd_warshall_tough_work(adj_mat, k, n_iters)
 
-    for i in range(len(nodes_set)):
-        adj_mat = floyd_warshall_tough_work(adj_mat)
+    for i in range(n_iters):
+        result_matrix = floyd_warshall_tough_work(result_matrix, k, n_iters)
+        k += 1
 
-    return adj_mat
+    return result_matrix, nodes_set
         
     
-def floyd_warshall_tough_work(L_i):
+def floyd_warshall_tough_work(prev_mat, k, sz):
 
-    nada = "nada util por aca"
-    return nada
-    #print(L_i)
+    ans = prev_mat
+
+    if (k != 0):
+
+        for i in range(sz):
+            for j in range(sz):
+
+                if i == j:
+                    continue
+
+                ans[i][j] = min([ prev_mat[i][j], prev_mat[i][k] + prev_mat[k][j] ])
+    else:
+
+        for i in range(sz):
+            for j in range(sz):
+
+                if (prev_mat[i][j] == 0) and (i != j):
+                    ans[i][j] = math.inf
+                else: 
+                    ans[i][j] = prev_mat[i][j]
+
+    return ans
     
+def get_center(excentricities, nodes_list, G):
+
+    n_nodes = len(nodes_list)
+    vertex_exentricity = {}
+
+    for vertex, col in zip( nodes_list, list(range(n_nodes)) ):
+
+        #setea por defecto la excentricidad en infinito para que 
+        #siempre que encuentre cualquier otro valor lo cambie 
+        vertex_exentricity[vertex] = -math.inf
+
+        #revisa las distancias entre un nodo y los demás nodos
+        #en búsca de la mayor de las distancias
+        for row in range(n_nodes):
+            value = excentricities[row][col]
+
+            if  (value > vertex_exentricity[vertex]) and (value != math.inf):
+                vertex_exentricity[vertex] = value
+
+    min_excentr = min(vertex_exentricity.values())
+    center = [v for v in vertex_exentricity if vertex_exentricity[v] == min_excentr]
+
+    H = G.subgraph(center)
+    return H
+
+
 def create_visualization(H, nodeColor, edgeColor, fontSize):
 
     #obtención de los pesos del grafo para añadirlos como 
     #etiquetas
     edge_weights = {(u,v):round(d['weight'],2) for u,v,d in H.edges(data=True)}
-    pos = nx.drawing.layout.spring_layout(H, k=2/m.sqrt(len(H.nodes)))
+
+    #posicionamiento de los nodos de los vértices según la los métodos 
+    #otorgados por 'spring_layout' que ve el sistema de nodos como un conjunto de vértices
+    #separados por resortes
+    pos = nx.drawing.layout.spring_layout(H, k=2/math.sqrt(len(H.nodes)))
 
     #asignación de tamaño de los vértices en la visualización
     sizes = []
@@ -173,18 +229,25 @@ def create_visualization(H, nodeColor, edgeColor, fontSize):
     plt.show()
 
 #se obtiene el grafo generado a partir del archivo csv
-graph = readGrapFile('./maiz.csv', ',' , 0)
+graph = readGrapFile('./cania_panelera.csv', ',' , 0)
+
+print("Grafo generado: \n")
+create_visualization(graph, 'red', 'orange', 9)
+
+excentricities_matrix, nodes = floyd_warshall(graph)
+
+print("matriz de las excentricidades: \n")
+print(excentricities_matrix)
+
+print("vértices y sus excentricidades\n")
+center = get_center(excentricities_matrix, nodes, graph)
+create_visualization(center, 'red', 'orange', 9)
+
+
+
 
 #for e, datadict in graph.edges.items():
 #    print(e, datadict)
-
-floyd_warshall(graph)
-
-print("Grafo generado: \n")
-
-create_visualization(graph, 'red', 'orange', 9)
-
-
 
 
 #documentation used:
