@@ -181,5 +181,7 @@ plt.show()
 #1) https://en.wikipedia.org/wiki/Norm_(mathematics)
 #2) https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.linalg.norm.html
 
-#add labels 
+#add labels for network drawing
+#1) https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.spring_layout.html
+#2) https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx_edge_labels.html
 
