@@ -176,12 +176,14 @@ def floyd_warshall_tough_work(prev_mat, k, sz):
 
     return ans
     
-def get_center(excentricities, nodes_list, G):
+def get_center(G):
 
-    n_nodes = len(nodes_list)
+    distances_mat, nodes = floyd_warshall(graph)
+    n_nodes = len(nodes)
+
     vertex_exentricity = {}
 
-    for vertex, col in zip( nodes_list, list(range(n_nodes)) ):
+    for vertex, col in zip( nodes, list(range(n_nodes)) ):
 
         #setea por defecto la excentricidad en infinito para que 
         #siempre que encuentre cualquier otro valor lo cambie 
@@ -190,7 +192,7 @@ def get_center(excentricities, nodes_list, G):
         #revisa las distancias entre un nodo y los demás nodos
         #en búsca de la mayor de las distancias
         for row in range(n_nodes):
-            value = excentricities[row][col]
+            value = distances_mat[row][col]
 
             if  (value > vertex_exentricity[vertex]) and (value != math.inf):
                 vertex_exentricity[vertex] = value
@@ -202,7 +204,7 @@ def get_center(excentricities, nodes_list, G):
     return H
 
 
-def create_visualization(H, nodeColor, edgeColor, fontSize):
+def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
 
     #obtención de los pesos del grafo para añadirlos como 
     #etiquetas
@@ -225,23 +227,18 @@ def create_visualization(H, nodeColor, edgeColor, fontSize):
     nx.draw_networkx_edge_labels(G=H,pos=pos, edge_labels=edge_weights, font_color='b', font_size = fontSize)
 
     #dibujo del grafo
-    nx.draw(H, with_labels = False, font_weight='bold', pos=pos, node_size = sizes, edgecolors = edgeColor, node_color = nodeColor)
+    nx.draw(H, with_labels = withLabels, font_weight='bold', pos=pos, node_size = sizes, edgecolors = edgeColor, node_color = nodeColor)
     plt.show()
 
 #se obtiene el grafo generado a partir del archivo csv
 graph = readGrapFile('./cania_panelera.csv', ',' , 0)
 
 print("Grafo generado: \n")
-create_visualization(graph, 'red', 'orange', 9)
+create_visualization(graph, 'red', 'orange', 9, True)
 
-excentricities_matrix, nodes = floyd_warshall(graph)
-
-print("matriz de las excentricidades: \n")
-print(excentricities_matrix)
-
-print("vértices y sus excentricidades\n")
-center = get_center(excentricities_matrix, nodes, graph)
-create_visualization(center, 'red', 'orange', 9)
+print("Grafo centro:\n")
+center = get_center(graph)
+create_visualization(center, 'red', 'orange', 9, True)
 
 
 
