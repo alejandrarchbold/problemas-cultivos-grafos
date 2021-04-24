@@ -1,9 +1,8 @@
-import math
+import math as m
 import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 def readGrapFile(filename, sep, header):
     #input: nombre del archivo csv, sep (string que designa el separador de valores en el csv)
@@ -92,7 +91,7 @@ def euclidian_norm(vector):
     for i in vector:
         norm += i**2
 
-    return math.sqrt(norm)
+    return m.sqrt(norm)
 
 
 def get_adjacency_matrix(G):
@@ -147,7 +146,9 @@ def floyd_warshall(H):
     
 def floyd_warshall_tough_work(L_i):
 
-    print(L_i)
+    nada = "nada util por aca"
+    return nada
+    #print(L_i)
     
 
 #se obtiene el grafo generado a partir del archivo csv
@@ -160,7 +161,13 @@ floyd_warshall(graph)
 
 print("Grafo generado: \n")
 
-nx.draw(graph, with_labels = True, font_weight='bold')
+
+edge_weights = {(u,v,):round(d['weight'],2) for u,v,d in graph.edges(data=True)}
+pos = nx.drawing.layout.spring_layout(graph, k=2/m.sqrt(len(graph.nodes)))
+
+
+nx.draw_networkx_edge_labels(G=graph,pos=pos, edge_labels=edge_weights, font_color='b', font_size = 10)
+nx.draw(graph, with_labels = True, font_weight='bold', pos=pos)
 plt.show()
 
 #documentation used:
@@ -174,5 +181,5 @@ plt.show()
 #1) https://en.wikipedia.org/wiki/Norm_(mathematics)
 #2) https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.linalg.norm.html
 
-
+#add labels 
 
