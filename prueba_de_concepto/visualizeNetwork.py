@@ -3,6 +3,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pprint import pprint
 
 def readGrapFile(filename, sep, header):
     #input: nombre del archivo csv, sep (string que designa el separador de valores en el csv)
@@ -39,7 +40,7 @@ def get_NodesAndEdges(data):
     isolated_nodes = []     #lista para guardar los nodos que no tienen aristas 
 
     #se le pasan las opciones de maximización a la toma de entradas
-    selection = take_user_input(list(data.columns)[1:])
+    selections = take_user_input(list(data.columns)[1:])
 
     for i in range(len(data)):
 
@@ -81,9 +82,10 @@ def get_NodesAndEdges(data):
             #print()
 
             #si la selección es distinta de -1 (es decir si desea maximizar para
-            #alguna característica en particular, maximise esa característica)
-            if (selection != -1):
-                edge[selection] *= len(edge)
+            #alguna o algunas características en particular, maximise esa característica)
+            if (-1 not in selections):
+                for select in selections:
+                    edge[select] *= len(edge)
             
             weight = euclidian_norm(edge)
 
@@ -214,8 +216,9 @@ def get_center(G):
 
 def take_user_input(options):
     
-    msg1 = "¿Para cuál de las siguientes opciones desea optimizar el análisis\nde afectaciones? [seleccione un número]:"
-    print(msg1)
+    msg1 = "¿Para cuales de las siguientes opciones desea optimizar el análisis de afectaciones?\n [seleccione un número o varios y sepárelos por comas]:"
+
+    print(msg1 + "\n")
 
     #contador para crear la lista de opciones que se van a mostrar
     count = 0
@@ -227,11 +230,27 @@ def take_user_input(options):
         count += 1
 
     msg2 = ", ".join(real_options)                              #junta todas las opciones para ser mostradas
-    print(msg2)
+    print(msg2 + "\n")
 
-    opti_option = input("indique el número correspondiente a su selección [-1 si no desea maximizar una característica particular]: ")
+    opti_option = input("indique los números correspondientes a su selección [-1 si no desea maximizar una característica particular]: ")
 
-    return int(opti_option)
+    #borrado de posibles espacios al inicio o al final
+    #borrado de salto de linea del string
+    opti_option.strip(" ")
+    opti_option.strip("\n")
+
+    #separa todas las opciones escritas como número
+    options = opti_option.split(",")
+
+    #almacena las opciones convertidas a entero
+    options_converted = []
+
+    for opt in options:
+        if opt != '':
+            options_converted.append(int(opt))
+
+    print("opciones seleccionadas: ", options_converted)
+    return options_converted
 
 
 def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
@@ -243,7 +262,7 @@ def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
     #posicionamiento de los nodos de los vértices según la los métodos 
     #otorgados por 'spring_layout' que ve el sistema de nodos como un conjunto de vértices
     #separados por resortes
-    pos = nx.drawing.layout.spring_layout(H, k=2/math.sqrt(len(H.nodes)))
+    pos = nx.drawing.layout.spring_layout(H, k=5/math.sqrt(len(H.nodes)))
 
     #asignación de tamaño de los vértices en la visualización
     sizes = []
