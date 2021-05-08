@@ -38,6 +38,9 @@ def get_NodesAndEdges(data):
     nodes_weights = []      #lista para guardar las parejas de nodos y sus pesos
     isolated_nodes = []     #lista para guardar los nodos que no tienen aristas 
 
+    #se le pasan las opciones de maximización a la toma de entradas
+    selection = take_user_input(list(data.columns)[1:])
+
     for i in range(len(data)):
 
         edge_1_atributes = np.array(list(data.iloc[i, 1:]))
@@ -76,8 +79,14 @@ def get_NodesAndEdges(data):
             #print()
             #print(edge)
             #print()
+
+            #si la selección es distinta de -1 (es decir si desea maximizar para
+            #alguna característica en particular, maximise esa característica)
+            if (selection != -1):
+                edge[selection] *= len(edge)
             
             weight = euclidian_norm(edge)
+
 
             if weight != 0:
                 nodes_weights.append((node1, node2, weight))
@@ -202,6 +211,27 @@ def get_center(G):
 
     H = G.subgraph(center)
     return H
+
+def take_user_input(options):
+    
+    msg1 = "¿Para cuál de las siguientes opciones desea optimizar el análisis\nde afectaciones? [seleccione un número]:"
+    print(msg1)
+
+    #contador para crear la lista de opciones que se van a mostrar
+    count = 0
+    #lista que guarda las opciones con su forma de seleccion tal cual se debe mostrar en la interfaz de consola
+    real_options = []
+
+    for opts in options:
+        real_options.append(opts + " (" + str(count) + ")")     #le da formato a cada una de las opciones
+        count += 1
+
+    msg2 = ", ".join(real_options)                              #junta todas las opciones para ser mostradas
+    print(msg2)
+
+    opti_option = input("indique el número correspondiente a su selección [-1 si no desea maximizar una característica particular]: ")
+
+    return opti_option
 
 
 def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
