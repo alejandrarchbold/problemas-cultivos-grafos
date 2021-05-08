@@ -231,7 +231,7 @@ def take_user_input(options):
 
     opti_option = input("indique el número correspondiente a su selección [-1 si no desea maximizar una característica particular]: ")
 
-    return opti_option
+    return int(opti_option)
 
 
 def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
