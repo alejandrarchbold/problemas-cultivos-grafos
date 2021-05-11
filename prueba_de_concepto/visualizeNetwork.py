@@ -279,6 +279,44 @@ def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
     nx.draw(H, with_labels = withLabels, font_weight='bold', pos=pos, node_size = sizes, edgecolors = edgeColor, node_color = nodeColor)
     plt.show()
 
+def Kruskal(G):
+    # Diccionario de (edge:peso)
+    dicc = {}
+    for e in list(G.edges):
+        dicc[e] = G.get_edge_data(e[0],e[1])["weight"]
+    # Orgnizacion de pesos de mayor a menor
+    maxPesos = sorted(dicc.values(), reverse=True)
+    nodosNuevos = []
+    nuevosLados = {}
+    # Lista para enumerar componentes iniciando con todos los vertices aislados
+    comp = [i for i in range(len(G.nodes))]
+    # Diccionario de componentes (indice, componente)
+    d = {}
+    for j in range(len(G.nodes)):
+        d[comp[j]] = list(G.nodes)[j]
+        
+    for w in maxPesos:
+        for e in list(G.edges):
+            if dicc[e] == w:
+                if(e[0] not in nodosNuevos) or (e[1] not in nodosNuevos):
+                    if (e[0] not in nodosNuevos and e[1] in nodosNuevos):
+                        nodosNuevos.append(e[0])
+                    elif(e[1] not in nodosNuevos and e[0] in nodosNuevos):
+                        nodosNuevos.append(e[1])
+                    elif e[0] not in nodosNuevos and e[1] not in nodosNuevos:
+                        nodosNuevos.append(e[0])
+                        nodosNuevos.append(e[1])
+                    nuevosLados[e] = dicc[e]
+                if len(nodosNuevos)==len(G.nodes) and len(nuevosLados)==(len(G.edges)-1):
+                    break
+    # Creacion de arbol de expansion con pesos maximo
+    T = nx.Graph()
+    T.add_nodes_from(nodosNuevos)
+    edges_pesosNuevos = [(e[0],e[1],nuevosLados[e]) for e in nuevosLados.keys()]
+    T.add_weighted_edges_from(edges_pesosNuevos)
+    
+    return T
+
 #se obtiene el grafo generado a partir del archivo csv
 graph = readGrapFile('./cania_panelera.csv', ',' , 0)
 
@@ -289,12 +327,12 @@ print("Grafo centro:\n")
 center = get_center(graph)
 create_visualization(center, 'red', 'orange', 9, True)
 
+# Generacion de arbol de expansion
+T = Kruskal(graph)
+create_visualization(T, 'red', 'orange', 9, True) # Kruskal aplicado al grafo conexo (completo)
 
-
-
-#for e, datadict in graph.edges.items():
-#    print(e, datadict)
-
+T2 = Kruskal(center)
+create_visualization(T2, 'red', 'orange', 9, True) # Kruskal aplicado al centro del grafo original.
 
 #documentation used:
 #1) https://networkx.org/documentation/networkx-2.5/tutorial.html#drawing-graphs
