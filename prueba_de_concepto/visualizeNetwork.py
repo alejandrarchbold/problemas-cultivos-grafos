@@ -279,46 +279,41 @@ def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
     nx.draw(H, with_labels = withLabels, font_weight='bold', pos=pos, node_size = sizes, edgecolors = edgeColor, node_color = nodeColor)
     plt.show()
 
+## Algoritmo de Kruskal, expansion maxima
+
 def Kruskal(G):
-    # Diccionario de (edge:peso)
-    dicc = {}
+    # Lista de (edge:peso)
+    edge_weight = []
     for e in list(G.edges):
-        dicc[e] = G.get_edge_data(e[0],e[1])["weight"]
+        edge_weight.append((e,G.get_edge_data(e[0],e[1])["weight"]))
     # Orgnizacion de pesos de mayor a menor
-    maxPesos = sorted(dicc.values(), reverse=True)
-    nodosNuevos = []
-    nuevosLados = {}
-    # Lista para enumerar componentes iniciando con todos los vertices aislados
-    comp = [i for i in range(len(G.nodes))]
-    # Diccionario de componentes (indice, componente)
-    d = {}
-    for j in range(len(G.nodes)):
-        d[comp[j]] = list(G.nodes)[j]
-        
-    for w in maxPesos:
-        for e in list(G.edges):
-            if dicc[e] == w:
-                if(e[0] not in nodosNuevos) or (e[1] not in nodosNuevos):
-                    if (e[0] not in nodosNuevos and e[1] in nodosNuevos):
-                        nodosNuevos.append(e[0])
-                    elif(e[1] not in nodosNuevos and e[0] in nodosNuevos):
-                        nodosNuevos.append(e[1])
-                    elif e[0] not in nodosNuevos and e[1] not in nodosNuevos:
-                        nodosNuevos.append(e[0])
-                        nodosNuevos.append(e[1])
-                    nuevosLados[e] = dicc[e]
-                if len(nodosNuevos)==len(G.nodes) and len(nuevosLados)==(len(G.edges)-1):
-                    break
-    # Creacion de arbol de expansion con pesos maximo
+    edge_weight= sorted(edge_weight, key=lambda x: x[1], reverse=True)
+    # Inicializacion de arbol de expansion con vertices
     T = nx.Graph()
-    T.add_nodes_from(nodosNuevos)
-    edges_pesosNuevos = [(e[0],e[1],nuevosLados[e]) for e in nuevosLados.keys()]
-    T.add_weighted_edges_from(edges_pesosNuevos)
-    
+    T.add_nodes_from(list(G.nodes)) # V(T) = V(G), E(T) = empty set
+    T_copy = deepcopy(T)
+    while not nx.is_connected(T) and len(T.edges) != len(G.nodes)-1:
+        for i in range(len(edge_weight)):
+            e = edge_weight[i]
+            T_copy.add_edge(e[0][0], e[0][1], weight=e[1])
+            try:
+                # Verificacion si T_copy tiene un ciclo
+                nx.find_cycle(T_copy)
+                # Si la linea anterior funciona significa que hay ciclo
+                # Se deja T_copy como estaba inicialmente
+                T_copy = deepcopy(T)
+            except:
+                # Si no tiene ciclos agregamos a T el mismo lado
+                T.add_edge(e[0][0], e[0][1], weight=e[1])
+                # Eliminamos el lado de la lista de posibles lados
+                edge_weight.pop(i)
+                # terminamos la verificacion de aristas para este arbol
+                break            
     return T
 
 #se obtiene el grafo generado a partir del archivo csv
 graph = readGrapFile('./cania_panelera.csv', ',' , 0)
+#graph = readGrapFile('./prueba2.csv', ',' , 0)
 
 print("Grafo generado: \n")
 create_visualization(graph, 'red', 'orange', 9, True)
@@ -329,10 +324,25 @@ create_visualization(center, 'red', 'orange', 9, True)
 
 # Generacion de arbol de expansion
 T = Kruskal(graph)
-create_visualization(T, 'red', 'orange', 9, True) # Kruskal aplicado al grafo conexo (completo)
+print("Numero de componentes de T: ",nx.number_connected_components(T))
+print("|E(T)| = |V(G)|-1 ?: ",len(T.edges) == len(graph.nodes)-1)
+print("T es conexo?: ",nx.is_connected(T))
+try:
+    ciclo = list(nx.find_cycle(T))
+    print("ERROR: T tiene un ciclo")
+    print(ciclo)
+except:
+    print("T no tiene ciclos")
 
-T2 = Kruskal(center)
-create_visualization(T2, 'red', 'orange', 9, True) # Kruskal aplicado al centro del grafo original.
+
+#for e in list(T.edges):
+#    print((e,T.get_edge_data(e[0],e[1])["weight"]))
+
+create_visualization(T, 'red', 'orange', 9, True)
+
+#for e, datadict in graph.edges.items():
+#    print(e, datadict)
+
 
 #documentation used:
 #1) https://networkx.org/documentation/networkx-2.5/tutorial.html#drawing-graphs
@@ -348,4 +358,3 @@ create_visualization(T2, 'red', 'orange', 9, True) # Kruskal aplicado al centro 
 #add labels for network drawing
 #1) https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.spring_layout.html
 #2) https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx_edge_labels.html
-
