@@ -3,7 +3,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from pprint import pprint
+#from pprint import pprint
 from copy import deepcopy
 import os
 
@@ -196,7 +196,8 @@ def get_center(G):
     
     #obtiene las componentes del grafo para no agregar al algoritmo los nodos que no 
     #son de la componente más importante(con más nodos)
-    components = list(nx.connected_component_subgraphs(G))
+    A = (G.subgraph(c) for c in nx.connected_components(G))
+    components = list(A)
 
     max_indx = 0 #indice de la componente de components que tiene más vértices
     count = 0    #contador para asignar el max_indx
@@ -357,7 +358,9 @@ def Kruskal(G):
 
     #obtiene las componentes del grafo para no agregar al algoritmo los nodos que no 
     #son de la componente más importante(con más nodos)
-    components = list(nx.connected_component_subgraphs(graph))
+    
+    A = (G.subgraph(c) for c in nx.connected_components(G))
+    components = list(A)
 
     max_indx = 0 #indice de la componente de components que tiene más vértices
     count = 0    #contador para asignar el max_indx
