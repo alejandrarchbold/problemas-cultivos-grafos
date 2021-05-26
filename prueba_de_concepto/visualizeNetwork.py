@@ -302,9 +302,24 @@ def select_file_usr():
 
     user_select = int(input("Número del archivo escogido: "))
     print(csv[user_select])
+    print()
 
     return csv[user_select]
 
+def select_label_option():
+
+    print("¿Desea visualizar las etiquetas de los nodos?")
+    msg = "seleccione y/n: "
+    opt = ""
+
+    while True: 
+        opt = input(msg)
+        opt = opt.strip(' ')
+        opt = opt.lower()
+
+        if opt == 'y' or opt == 'n':
+            print()
+            return opt == 'y'
 
 def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
 
@@ -397,6 +412,8 @@ def Kruskal(G):
     return T
 
 selected_file = select_file_usr()
+label_option = select_label_option()
+
 
 #se obtiene el grafo generado a partir del archivo csv
 graph = readGrapFile(selected_file, ',' , 0)
@@ -404,11 +421,11 @@ graph = readGrapFile(selected_file, ',' , 0)
 
 
 print("Grafo generado: \n")
-create_visualization(graph, 'red', 'orange', 7, True)
+create_visualization(graph, 'red', 'orange', 7, label_option)
 
 print("Grafo centro:\n")
 center = get_center(graph)
-create_visualization(center, 'red', 'orange', 7, True)
+create_visualization(center, 'red', 'orange', 7, label_option)
 
 # Generacion de arbol de expansion
 T = Kruskal(graph)
@@ -427,7 +444,7 @@ except:
 #for e in list(T.edges):
 #    print((e,T.get_edge_data(e[0],e[1])["weight"]))
 
-create_visualization(T, 'red', 'orange', 7, True)
+create_visualization(T, 'red', 'orange', 7, label_option)
 
 #for e, datadict in graph.edges.items():
 #    print(e, datadict)
