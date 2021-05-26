@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pprint import pprint
+from copy import deepcopy
+import os
 
 def readGrapFile(filename, sep, header):
     #input: nombre del archivo csv, sep (string que designa el separador de valores en el csv)
@@ -131,7 +133,7 @@ def get_adjacency_matrix(G):
             #adyacencia (recuerde que para un grafo simple es simétrica)
             adj_matrix[j][i] = 1
             adj_matrix[i][j] = 1
-            H.remove_edge(u,v)                      #quito un vértice para disminuir la cantidad de vecinos 
+            H.remove_edge(u,v)                      #quito una arista para disminuir la cantidad de vecinos 
                                                     #y así eliminar la repetición de computaciones
             
     #print(adj_matrix.T == adj_matrix)              #para revisar si la matriz es simétrica y por lo tanto 
@@ -155,9 +157,9 @@ def floyd_warshall(H):
     k = 0
     result_matrix = floyd_warshall_tough_work(adj_mat, k, n_iters)
 
-    for i in range(n_iters):
-        result_matrix = floyd_warshall_tough_work(result_matrix, k, n_iters)
+    for i in range(1, n_iters+1):
         k += 1
+        result_matrix = floyd_warshall_tough_work(result_matrix, k, n_iters)
 
     return result_matrix, nodes_set
         
@@ -174,7 +176,9 @@ def floyd_warshall_tough_work(prev_mat, k, sz):
                 if i == j:
                     continue
 
-                ans[i][j] = min([ prev_mat[i][j], prev_mat[i][k] + prev_mat[k][j] ])
+                #recordar que en python se indexa desde 0 y no desde 1
+                #por eso la fórmula cambia ligeramente para la escritura en python
+                ans[i][j] = min([ prev_mat[i][j], prev_mat[i][k-1] + prev_mat[k-1][j] ])
     else:
 
         for i in range(sz):
@@ -189,7 +193,26 @@ def floyd_warshall_tough_work(prev_mat, k, sz):
     
 def get_center(G):
 
-    distances_mat, nodes = floyd_warshall(graph)
+    
+    #obtiene las componentes del grafo para no agregar al algoritmo los nodos que no 
+    #son de la componente más importante(con más nodos)
+    components = list(nx.connected_component_subgraphs(G))
+
+    max_indx = 0 #indice de la componente de components que tiene más vértices
+    count = 0    #contador para asignar el max_indx
+    n_G = 0      #guarda el número máximo de la cantidad de nodos de las componentes
+
+    #selecciona la componente con el mayor número de vértices para aplicarle el 
+    #floyd_warshall (esto porque en varios casos pueden haber componentes aisladas)
+    for component in components:
+
+        if len(component) > n_G:
+            n_G = len(component)
+            max_indx = count
+        
+        count += 1
+
+    distances_mat, nodes = floyd_warshall(components[max_indx])
     n_nodes = len(nodes)
 
     vertex_exentricity = {}
@@ -213,6 +236,7 @@ def get_center(G):
 
     H = G.subgraph(center)
     return H
+
 
 def take_user_input(options):
     
@@ -252,17 +276,49 @@ def take_user_input(options):
     print("opciones seleccionadas: ", options_converted)
     return options_converted
 
+def select_file_usr():
+
+    files = os.listdir(os.getcwd())
+    csv = [file_ for file_ in files if '.csv' in file_]
+    csv.sort()
+
+    print("***"*30)
+    print("Por favor seleccione uno de los cultivos que se muestran en lista: ")
+
+    #contador para crear la lista de opciones que se van a mostrar
+    count = 0
+    #lista que guarda las opciones con su forma de seleccion tal cual se debe mostrar en la interfaz de consola
+    real_options = []
+
+    for filename in csv:
+        real_options.append(filename + " (" + str(count) + ")")     #le da formato a cada una de las opciones
+        count += 1
+
+    msg2 = ", ".join(real_options)                              #junta todas las opciones para ser mostradas
+
+    print(msg2 + "\n")
+    print("***"*30)
+    print()
+
+    user_select = int(input("Número del archivo escogido: "))
+    print(csv[user_select])
+
+    return csv[user_select]
+
 
 def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
 
     #obtención de los pesos del grafo para añadirlos como 
     #etiquetas
     edge_weights = {(u,v):round(d['weight'],2) for u,v,d in H.edges(data=True)}
+    #print(edge_weights)
 
     #posicionamiento de los nodos de los vértices según la los métodos 
     #otorgados por 'spring_layout' que ve el sistema de nodos como un conjunto de vértices
     #separados por resortes
-    pos = nx.drawing.layout.spring_layout(H, k=5/math.sqrt(len(H.nodes)))
+    #pos = nx.drawing.layout.spring_layout(H, k=5/math.sqrt(len(H.nodes)))
+    #pos = nx.drawing.layout.circular_layout(H, scale=10)
+    pos = nx.drawing.layout.fruchterman_reingold_layout(H, k=100, iterations=25000, scale=500)
 
     #asignación de tamaño de los vértices en la visualización
     sizes = []
@@ -276,33 +332,62 @@ def create_visualization(H, nodeColor, edgeColor, fontSize, withLabels=False):
     nx.draw_networkx_edge_labels(G=H,pos=pos, edge_labels=edge_weights, font_color='b', font_size = fontSize)
 
     #dibujo del grafo
-    nx.draw(H, with_labels = withLabels, font_weight='bold', pos=pos, node_size = sizes, edgecolors = edgeColor, node_color = nodeColor)
+    nx.draw(H, with_labels = withLabels, font_weight='bold', pos=pos, node_size = sizes, edgecolors = edgeColor,
+            node_color = nodeColor)
     plt.show()
 
 ## Algoritmo de Kruskal, expansion maxima
 
 def Kruskal(G):
+
+    #obtiene las componentes del grafo para no agregar al algoritmo los nodos que no 
+    #son de la componente más importante(con más nodos)
+    components = list(nx.connected_component_subgraphs(graph))
+
+    max_indx = 0 #indice de la componente de components que tiene más vértices
+    count = 0    #contador para asignar el max_indx
+    n_G = 0      #guarda el número máximo de la cantidad de nodos de las componentes
+
+    #selecciona la componente con el mayor número de vértices para aplicarle el 
+    #Kruskal (esto porque en varios casos pueden haber componentes aisladas)
+    for component in components:
+
+        if len(component) > n_G:
+            n_G = len(component)
+            max_indx = count
+        
+        count += 1
+
+    G = components[max_indx]
+
     # Lista de (edge:peso)
     edge_weight = []
     for e in list(G.edges):
         edge_weight.append((e,G.get_edge_data(e[0],e[1])["weight"]))
+
     # Orgnizacion de pesos de mayor a menor
     edge_weight= sorted(edge_weight, key=lambda x: x[1], reverse=True)
+
     # Inicializacion de arbol de expansion con vertices
     T = nx.Graph()
     T.add_nodes_from(list(G.nodes)) # V(T) = V(G), E(T) = empty set
     T_copy = deepcopy(T)
+
     while not nx.is_connected(T) and len(T.edges) != len(G.nodes)-1:
+
         for i in range(len(edge_weight)):
             e = edge_weight[i]
             T_copy.add_edge(e[0][0], e[0][1], weight=e[1])
+
             try:
+
                 # Verificacion si T_copy tiene un ciclo
                 nx.find_cycle(T_copy)
                 # Si la linea anterior funciona significa que hay ciclo
                 # Se deja T_copy como estaba inicialmente
                 T_copy = deepcopy(T)
             except:
+
                 # Si no tiene ciclos agregamos a T el mismo lado
                 T.add_edge(e[0][0], e[0][1], weight=e[1])
                 # Eliminamos el lado de la lista de posibles lados
@@ -311,22 +396,26 @@ def Kruskal(G):
                 break            
     return T
 
+selected_file = select_file_usr()
+
 #se obtiene el grafo generado a partir del archivo csv
-graph = readGrapFile('./cania_panelera.csv', ',' , 0)
+graph = readGrapFile(selected_file, ',' , 0)
 #graph = readGrapFile('./prueba2.csv', ',' , 0)
 
+
 print("Grafo generado: \n")
-create_visualization(graph, 'red', 'orange', 9, True)
+create_visualization(graph, 'red', 'orange', 7, True)
 
 print("Grafo centro:\n")
 center = get_center(graph)
-create_visualization(center, 'red', 'orange', 9, True)
+create_visualization(center, 'red', 'orange', 7, True)
 
 # Generacion de arbol de expansion
 T = Kruskal(graph)
-print("Numero de componentes de T: ",nx.number_connected_components(T))
-print("|E(T)| = |V(G)|-1 ?: ",len(T.edges) == len(graph.nodes)-1)
-print("T es conexo?: ",nx.is_connected(T))
+print("Numero de componentes de T: ",  nx.number_connected_components(T))
+print("T es conexo?: ", nx.is_connected(T))
+
+
 try:
     ciclo = list(nx.find_cycle(T))
     print("ERROR: T tiene un ciclo")
@@ -338,7 +427,7 @@ except:
 #for e in list(T.edges):
 #    print((e,T.get_edge_data(e[0],e[1])["weight"]))
 
-create_visualization(T, 'red', 'orange', 9, True)
+create_visualization(T, 'red', 'orange', 7, True)
 
 #for e, datadict in graph.edges.items():
 #    print(e, datadict)
