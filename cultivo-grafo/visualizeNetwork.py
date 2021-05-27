@@ -447,6 +447,7 @@ except:
 #for e in list(T.edges):
 #    print((e,T.get_edge_data(e[0],e[1])["weight"]))
 
+print("Árbol de expansión máximo:\n")
 create_visualization(T, 'gold', 'khaki', 7, label_option)
 
 #for e, datadict in graph.edges.items():
