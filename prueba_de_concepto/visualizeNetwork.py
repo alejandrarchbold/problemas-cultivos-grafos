@@ -424,11 +424,11 @@ graph = readGrapFile(selected_file, ',' , 0)
 
 
 print("Grafo generado: \n")
-create_visualization(graph, 'red', 'orange', 7, label_option)
+create_visualization(graph, 'gold', 'khaki', 7, label_option)
 
 print("Grafo centro:\n")
 center = get_center(graph)
-create_visualization(center, 'red', 'orange', 7, label_option)
+create_visualization(center, 'gold', 'khaki', 7, label_option)
 
 # Generacion de arbol de expansion
 T = Kruskal(graph)
@@ -447,7 +447,7 @@ except:
 #for e in list(T.edges):
 #    print((e,T.get_edge_data(e[0],e[1])["weight"]))
 
-create_visualization(T, 'red', 'orange', 7, label_option)
+create_visualization(T, 'gold', 'khaki', 7, label_option)
 
 #for e, datadict in graph.edges.items():
 #    print(e, datadict)
